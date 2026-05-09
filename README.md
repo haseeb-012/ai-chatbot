@@ -1,36 +1,78 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# HaseebAI Chatbot
 
-## Getting Started
+Streaming AI chat for **HaseebAI** — a Next.js app that talks to **Google Gemini** through the [Vercel AI SDK](https://sdk.vercel.ai/). The UI uses a floating launcher, a ChatGPT-style panel, Markdown rendering for replies, and suggested prompts from `lib/haseeb-ai.ts`.
 
-First, run the development server:
+## Stack
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+- **Next.js** 16 (App Router) · **React** 19 · **TypeScript**
+- **AI SDK** (`ai`, `@ai-sdk/react`) + **`@ai-sdk/google`** (Gemini)
+- **Tailwind CSS** v4 · **shadcn/ui**-style components
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Prerequisites
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+- **Node.js** 18+
+- **pnpm** (recommended; see `pnpm-lock.yaml`)
+- A **Google AI Studio** API key: [Get API key](https://aistudio.google.com/apikey)
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Setup
 
-## Learn More
+1. Clone the repo and install dependencies:
 
-To learn more about Next.js, take a look at the following resources:
+   ```bash
+   pnpm install
+   ```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+2. Create **`.env.local`** in the project root:
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+   ```env
+   GOOGLE_GENERATIVE_AI_API_KEY=your_key_here
 
-## Deploy on Vercel
+   # Optional — overrides default Gemini model (see app/api/chat/route.ts)
+   # GEMINI_MODEL=gemini-3.1-flash-lite-preview
+   ```
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+3. Run the dev server:
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+   ```bash
+   pnpm dev
+   ```
+
+4. Open [http://localhost:3000](http://localhost:3000). Click the chat button (bottom-right), send a message, or pick a suggested question.
+
+## Scripts
+
+| Command       | Description              |
+| ------------- | ------------------------ |
+| `pnpm dev`    | Development server       |
+| `pnpm build`  | Production build         |
+| `pnpm start`  | Start production server  |
+| `pnpm lint`   | Run ESLint               |
+
+## Configuration
+
+| Item | Location |
+| ---- | -------- |
+| **Default model** | `app/api/chat/route.ts` — defaults to **`gemini-3.1-flash-lite-preview`** unless `GEMINI_MODEL` is set |
+| **System prompt & FAQ chips** | `lib/haseeb-ai.ts` (`HASEEB_AI_SYSTEM_PROMPT`, `HASEEB_AI_FAQ`) |
+| **Chat UI** | `components/chat.tsx` |
+| **API route** | `app/api/chat/route.ts` → `POST /api/chat` |
+
+### Environment variables
+
+| Variable | Required | Description |
+| -------- | -------- | ----------- |
+| `GOOGLE_GENERATIVE_AI_API_KEY` | Yes | Gemini API key ([AI Studio](https://aistudio.google.com/)) |
+| `GEMINI_MODEL` | No | Model id string (must match what `@ai-sdk/google` supports) |
+
+If your Google project or key is **suspended** or invalid, the chat will show an error — fix the key in AI Studio / Cloud Console and rotate `.env.local`.
+
+## Deploy (e.g. Vercel)
+
+1. Set **`GOOGLE_GENERATIVE_AI_API_KEY`** in the hosting dashboard (and **`GEMINI_MODEL`** if you use a non-default model).
+2. Optional: uncomment **`export const maxDuration = 60`** in `app/api/chat/route.ts` if long streams time out on serverless.
+
+## Learn more
+
+- [AI SDK docs](https://sdk.vercel.ai/docs)
+- [Gemini API](https://ai.google.dev/gemini-api/docs)
+- [Next.js docs](https://nextjs.org/docs)
