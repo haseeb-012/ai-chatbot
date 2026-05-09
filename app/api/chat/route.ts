@@ -1,28 +1,43 @@
 import { streamText, convertToModelMessages, type UIMessage } from 'ai';
-import { openai } from '@ai-sdk/openai';
+import { google } from '@ai-sdk/google';
 import { NextResponse } from 'next/server';
 
 import { HASEEB_AI_SYSTEM_PROMPT } from '@/lib/haseeb-ai';
 
-/** Override with `OPENAI_MODEL` in `.env` (e.g. `gpt-4o`, `gpt-4o-mini`). */
-const OPENAI_MODEL = process.env.OPENAI_MODEL?.trim() || 'gpt-4o-mini';
+/** Override with `GEMINI_MODEL` in `.env`. Default: Gemini 3.1 Flash Lite (preview id from AI SDK). */
+const GEMINI_MODEL =
+	process.env.GEMINI_MODEL?.trim() || 'gemini-3.1-flash-lite-preview';
 
 // Optional on Vercel for long streams:
 // export const maxDuration = 60
 
 export async function POST(req: Request) {
 	try {
-		if (!process.env.OPENAI_API_KEY) {
-			return new NextResponse('Missing OpenAI API key.', { status: 400 });
+		if (!process.env.GOOGLE_GENERATIVE_AI_API_KEY) {
+			return new NextResponse('Missing Google Generative AI API key.', {
+				status: 400,
+			});
 		}
 
 		const { messages }: { messages: UIMessage[] } = await req.json();
 
+		const useThinkingBudget =
+			/gemini-(2\.5|3)/.test(GEMINI_MODEL) || GEMINI_MODEL.includes('thinking');
+
 		const result = streamText({
-			model: openai(OPENAI_MODEL),
+			model: google(GEMINI_MODEL),
 			system: HASEEB_AI_SYSTEM_PROMPT,
 			messages: await convertToModelMessages(messages),
 			maxRetries: 1,
+			...(useThinkingBudget ?
+				{
+					providerOptions: {
+						google: {
+							thinkingConfig: { thinkingBudget: 0 },
+						},
+					},
+				}
+			:	{}),
 		});
 
 		return result.toUIMessageStreamResponse();
